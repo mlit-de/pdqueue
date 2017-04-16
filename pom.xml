@@ -39,7 +39,9 @@
                     <links>
                         <link>http://java.sun.com/j2se/1.8.0/docs/api/</link>
                     </links>
-                    <sourceFileExcludes>${basedir}/src/main/java/de/mlit/pdqueue/PDQueueFactory</sourceFileExcludes>
+                    <sourceFileExcludes>
+                        <exclude>${basedir}/src/main/java/de/mlit/pdqueue/PDQueueFactory</exclude>
+                    </sourceFileExcludes>
                     <show>public</show>
                     <source>1.8</source>
                 </configuration>
