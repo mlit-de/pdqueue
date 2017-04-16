@@ -1,7 +1,9 @@
 package de.mlit.pdqueue;
 
+import java.lang.reflect.Array;
 import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /*
  * Created by user on 4/14/17.
@@ -191,6 +193,101 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         return this;
     }
 
+    @Override
+    public int hashCode() {
+        int result = 47;
+        PDQueue<E> q = this;
+        while(q.size()>0) {
+            Object o = q.headL();
+            result = result * 97 + (o==null ? 0 : o.hashCode());
+            q=q.tailL();
+        }
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof PDQueue)) {
+            return false;
+        } else if(obj == this) {
+            return true;
+        }
+        PDQueue other = (PDQueue)obj;
+        if(this.size() != other.size()) {
+            return false;
+        }
+        PDQueue self = this;
+        while(self.size() > 0) {
+            Object o1 = self.headL();
+            Object o2 = other.headL();
+            if(!(o1 == null ? o2 == null : o1.equals(o2))) {
+                return false;
+            }
+            self = self.tailL();
+            other = other.tailL();
+        }
+        return true;
+    }
+
+    /**
+     * Calls accept on the consumer for each element in the queue from left to right
+     * @param consumer
+     */
+    public abstract void forEachLtoR(Consumer<E> consumer);
+
+    /**
+     * Calls consumer for each element in the queue from left to right
+     * @param consumer
+     */
+    public abstract void forEachRtoL(Consumer<E> consumer);
+
+    /**
+     * returns the elements of the queue as array. If argument array is big enough, the elements are copied
+     * to this array, otherwise a new array is created.
+     * @param array
+     * @return an array containing all elements of the queue
+     */
+    public E[] toArray(E[] array) {
+        E[] result = createSizedArray(array);
+        forEachLtoR(new Consumer<E>() {
+            private int i = 0;
+            @Override
+            public void accept(E e) {
+                result[i++] = e;
+            }
+        });
+        return result;
+    }
+
+    /**
+     * returns the elements of the queue as array in reverse order. If argument array is big enough, the elements are copied
+     * to this array, otherwise a new array is created.
+     * @param array
+     * @return an array containing all elements of the queue in reverse order
+     */
+    public E[] toArrayReverse(E[] array) {
+        E[] result = createSizedArray(array);
+        forEachRtoL(new Consumer<E>() {
+            private int i = 0;
+            @Override
+            public void accept(E e) {
+                result[i++] = e;
+            }
+        });
+        return result;
+    }
+
+    private E[] createSizedArray(E[] array) {
+        E[] result;
+        if(array.length>=size()) {
+            result = array;
+        } else {
+            result = (E[]) Array.newInstance(array.getClass().getComponentType(), size());
+        }
+        return result;
+    }
+
+
     abstract static class DQ0<E> extends PDQueue<E> implements PDQueueFactory<E> {
 
         protected DQ0() {
@@ -255,6 +352,7 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             throw new NoSuchElementException();
         }
 
+        @Override
         public boolean isEmpty() {
             return true;
         }
@@ -264,7 +362,13 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             throw new IndexOutOfBoundsException();
         }
 
+        @Override
+        public void forEachLtoR(Consumer<E> cons) {
+        }
 
+        @Override
+        public void forEachRtoL(Consumer<E> cons) {
+        }
     }
 
     abstract static class DQ1<E> extends PDQueue<E> implements PDQueueFactory<E> {
@@ -338,6 +442,15 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             return f.apply(e0, n);
         }
 
+        @Override
+        public void forEachLtoR(Consumer<E> consumer) {
+            consumer.accept(e0);
+        }
+
+        @Override
+        public void forEachRtoL(Consumer<E> consumer) {
+            consumer.accept(e0);
+        }
     }
 
     abstract static class DQ2<E> extends PDQueue<E> implements PDQueueFactory<E> {
@@ -413,6 +526,17 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             return n < m ? f.apply(e0, n) : f.apply(e1, n - m);
         }
 
+        @Override
+        public void forEachLtoR(Consumer<E> consumer) {
+            consumer.accept(e0);
+            consumer.accept(e1);
+        }
+
+        @Override
+        public void forEachRtoL(Consumer<E> consumer) {
+            consumer.accept(e1);
+            consumer.accept(e0);
+        }
     }
 
     abstract static class DQ3<E> extends PDQueue<E> implements PDQueueFactory<E> {
@@ -496,6 +620,19 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             return f.apply(e2, n - m1);
         }
 
+        @Override
+        public void forEachLtoR(Consumer<E> consumer) {
+            consumer.accept(e0);
+            consumer.accept(e1);
+            consumer.accept(e2);
+        }
+
+        @Override
+        public void forEachRtoL(Consumer<E> consumer) {
+            consumer.accept(e2);
+            consumer.accept(e1);
+            consumer.accept(e0);
+        }
     }
 
     abstract static class DQ4<E> extends PDQueue<E> implements PDQueueFactory<E> {
@@ -588,7 +725,21 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             return internalPair(e2, e3);
         }
 
+        @Override
+        public void forEachLtoR(Consumer<E> consumer) {
+            consumer.accept(e0);
+            consumer.accept(e1);
+            consumer.accept(e2);
+            consumer.accept(e3);
+        }
 
+        @Override
+        public void forEachRtoL(Consumer<E> consumer) {
+            consumer.accept(e3);
+            consumer.accept(e2);
+            consumer.accept(e1);
+            consumer.accept(e0);
+        }
     }
 
     abstract static class DQn<E> extends PDQueue<E> {
@@ -822,5 +973,18 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             }
         }
 
+        @Override
+        public void forEachLtoR(Consumer<E> consumer) {
+            left.forEachLtoR(consumer);
+            middle.forEachLtoR(k -> k.forEachLtoR(consumer));
+            right.forEachLtoR(consumer);
+        }
+
+        @Override
+        public void forEachRtoL(Consumer<E> consumer) {
+            right.forEachRtoL(consumer);
+            middle.forEachRtoL(k -> k.forEachRtoL(consumer));
+            left.forEachRtoL(consumer);
+        }
     }
 }

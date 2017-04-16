@@ -6,13 +6,12 @@ import org.junit.Test;
 import java.util.*;
 
 /**
- * Created by user on 4/14/17.
+ * Test cases for PDQueue
  */
 public class PDQueueTest {
 
 
-
-    public void runTest(Iterator<Integer> script) {
+    protected void runTest(Iterator<Integer> script) {
 
 
         LinkedList<Integer> vgl = new LinkedList<Integer>();
@@ -114,7 +113,7 @@ public class PDQueueTest {
     }
 
     @Test
-    public void testSingle() throws Exception {
+    public void testRandom() throws Exception {
         Iterator<Integer> iterator = new Iterator<Integer>() {
             int ctr = 10000;
             Random random = new Random();
@@ -162,6 +161,38 @@ public class PDQueueTest {
         }
         for(int i=0; i<1000; i++) {
             Assert.assertEquals(i, (int)dq.get(i));
+        }
+    }
+
+    @Test
+    public void testEquals() {
+        PDQueue<Integer> q1 = PDQueue.<Integer>empty().consConsR(1,2).consConsR(3,null).consR(4).consConsR(5,6);
+        PDQueue<Integer> q2 = PDQueue.<Integer>empty().consL(6).consL(5).consL(4).consL(null).consL(3).consL(2).consL(1);
+        PDQueue<Integer> q3 = PDQueue.<Integer>empty().consConsR(1,2).consConsR(3,4).consConsR(5,6);
+        Assert.assertEquals(q1,q2);
+        Assert.assertEquals(q2,q1);
+        Assert.assertNotEquals(q1,q3);
+        Assert.assertNotEquals(q3,q2);
+        Assert.assertEquals(q1.hashCode(), q2.hashCode());
+        Assert.assertNotEquals(q1.hashCode(), q3.hashCode());
+    }
+
+    @Test
+    public void testToArray() {
+        PDQueue<Integer> q = PDQueue.<Integer>empty();
+        for(int i=0; i<10000; i++) {
+            q = q.consR(i);
+        }
+        Integer[] array = q.toArray(new Integer[0]);
+        Assert.assertEquals(10000, array.length);
+        for(int i=0; i<10000; i++) {
+            Assert.assertEquals(i,(int)array[i]);
+        }
+
+        Integer[] array2 = q.toArrayReverse(new Integer[0]);
+        Assert.assertEquals(10000, array.length);
+        for(int i=0; i<10000; i++) {
+            Assert.assertEquals(9999-i,(int)array2[i]);
         }
     }
 
