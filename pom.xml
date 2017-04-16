@@ -4,7 +4,7 @@
 
     <groupId>de.mlit.pdqueue</groupId>
     <artifactId>pdqueue</artifactId>
-    <version>1.0</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <name>${groupId}:${artifactId}</name>
 
@@ -36,7 +36,6 @@
         <connection>scm:git:git://github.com/mlit-de/pdqueue.git</connection>
         <developerConnection>scm:git:git://github.com/mlit-de/pdqueue.git</developerConnection>
         <url>http://github.com/mlit-de/pdqueue/tree/master</url>
-        <tag>pdqueue-1.0</tag>
   </scm>
 
     <licenses>
