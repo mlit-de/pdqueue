@@ -3,24 +3,53 @@ package de.mlit.pdqueue;
 import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 
-/**
+/*
  * Created by user on 4/14/17.
+ */
+
+/**
+ * This class represents a persistent double ended queue with elements of type E
+ * @param <E> the type of the elements in the queue
  */
 public abstract class PDQueue<E> implements PDQueueFactory<E> {
 
-    public static <A> PDQueue<A> empty() {
+    /**
+     * Returns an empty queue.
+     * @param <E> the type of the elements in the queue
+     * @return an emptye PDQueue
+     */
+    public static <E> PDQueue<E> empty() {
         return Top.EMPTY;
     }
 
-    public static <A> PDQueue<A> singleton(A a) {
-        return Top.INSTANCE.createSingleton(a);
+    /**
+     * Returns a singleton queue with the given element
+     * @param e the element to be contained in the queue
+     * @param <E> the type of the elements in the queue
+     * @return the queue containing just the one element e
+     */
+    public static <E> PDQueue<E> singleton(E e) {
+        return Top.INSTANCE.internalSingleton(e);
     }
 
-    public static <A> PDQueue<A> concat(PDQueue<A> q1, PDQueue<A> q2) {
-        return Top.INSTANCE.createConcatenation(q1, q2);
+    /**
+     * Returns the concatenation of two queues
+     * @param q1 the left queue
+     * @param q2 the right queue
+     * @param <E> the type of the elements in the queue
+     * @return the concatenation of q1 and q2
+     */
+
+    public static <E> PDQueue<E> concat(PDQueue<E> q1, PDQueue<E> q2) {
+        return Top.INSTANCE.internalConcatenate(q1, q2);
     }
 
     protected final int size;
+
+    /**
+     * Gives the size of the queue, which is the number of elements contained in it
+     * @return the size
+     */
 
     public int size() {
         return size;
@@ -31,6 +60,12 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
     }
 
 
+    /**
+     * Returns the n-th element (zero based) of the queue. The 0-th element is the leftmost elmenet, the (size()-1)-th element the right most.
+     * @throws IndexOutOfBoundsException if n&lt;0 or n&gt;=size()
+     * @param n the index
+     * @return the n-th element
+     */
     public E get(int n) {
         return get(n, (k, k1) -> {
             if (k1 == 0) {
@@ -43,33 +78,102 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
 
     protected abstract int kind();
 
+    /**
+     * Gives the left most element
+     * @throws NoSuchElementException if the queue is empty
+     * @return the left most element
+     */
     public abstract E headL();
 
+    /**
+     * Gives the right most element
+     * @throws NoSuchElementException if the queue is empty
+     * @return the right most element
+     */
     public abstract E headR();
 
+    /**
+     * Gives a queue with element e added to the left
+     * @param e the element to be added
+     * @return the queue with element e added to the left
+     */
     public abstract PDQueue<E> consL(E e);
 
+    /**
+     * Gives a queue with element e added to the right
+     * @param e the element to be added
+     * @return the queue with element e added to the right
+     */
     public abstract PDQueue<E> consR(E e);
 
+    /**
+     * Gives a queue with element ee and e added to the left. This result will be the same as the result when calling
+     * .consL(e).consL(ee), but is more efficient.
+     * @param e the element to be added
+     * @return the queue with elements ee and e added to the left
+     */
     public abstract PDQueue<E> consConsL(E ee, E e);
 
+    /**
+     * Gives a queue with element e and ee added to the right. This result will be the same as the result when calling
+     * .consR(e).consR(ee), but is more efficient.
+     * @param e the element to be added
+     * @return the queue with elements e and ee added to the right
+     */
     public abstract PDQueue<E> consConsR(E e, E ee);
 
+    /**
+     * Gives the queue with the leftmost element removed.
+     * @throws NoSuchElementException if the queue is empty
+     * @return the queue with the leftmost element removed
+     */
     public abstract PDQueue<E> tailL();
 
+    /**
+     * Gives the queue with the rightmost element removed.
+     * @throws NoSuchElementException if the queue is empty
+     * @return the queue with the rightmost element removed
+     */
     public abstract PDQueue<E> tailR();
 
+    /**
+     * Appends this queue from left to the queue q. q1.appendLTo(q2) gives the same result as concat(q1,q2).
+     * @param q the queue to append this queue to
+     * @return the concatenation of the two queues
+     */
     public abstract PDQueue<E> appendLTo(PDQueue<E> q);
 
+    /**
+     * Appends this queue from right to the queue q. q1.appendRTo(q2) gives the same result as concat(q2,q1).
+     * @param q the queue to append this queue to
+     * @return the concatenation of the two queues
+     */
     public abstract PDQueue<E> appendRTo(PDQueue<E> q);
 
-    public abstract PDQueue<E> changeL(E e);
+    /**
+     * Gives a queue with the leftmost element replaced by e
+     * @param e the value to replace the leftmost element with
+     * @throws NoSuchElementException if the queue is empty
+     * @return the queue with the leftmost element replaced by e
+     */
+    public abstract PDQueue<E> replaceL(E e);
 
-    public abstract PDQueue<E> changeR(E e);
+    /**
+     * Gives a queue with the rightmost element replaced by e
+     * @param e the value to replace the rightmost element with
+     * @throws NoSuchElementException if the queue is empty
+     * @return the queue with the rightmost element replaced by e
+     */
+    public abstract PDQueue<E> replaceR(E e);
 
+    /**
+     * Returns wether the queue is empty. q.isEmpty() returns the same result than q.size() == 0
+     * @return true, if the queue is empty, false otherwise
+     */
     public boolean isEmpty() {
         return false;
     }
+
 
     protected PDQueue<E> prepareConsL() {
         return this;
@@ -86,8 +190,6 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
     protected PDQueue<E> prepareTailR() {
         return this;
     }
-
-
 
     abstract static class DQ0<E> extends PDQueue<E> implements PDQueueFactory<E> {
 
@@ -108,22 +210,22 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         public PDQueue<E> consL(E e) {
-            return createSingleton(e);
+            return internalSingleton(e);
         }
 
         public PDQueue<E> consR(E e) {
-            return createSingleton(e);
+            return internalSingleton(e);
         }
 
 
         @Override
         public PDQueue<E> consConsL(E ee, E e) {
-            return createPair(ee, e);
+            return internalPair(ee, e);
         }
 
         @Override
         public PDQueue<E> consConsR(E e, E ee) {
-            return createPair(e, ee);
+            return internalPair(e, ee);
         }
 
         public PDQueue<E> tailL() {
@@ -144,12 +246,12 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         @Override
-        public PDQueue<E> changeL(E e) {
+        public PDQueue<E> replaceL(E e) {
             throw new NoSuchElementException();
         }
 
         @Override
-        public PDQueue<E> changeR(E e) {
+        public PDQueue<E> replaceR(E e) {
             throw new NoSuchElementException();
         }
 
@@ -186,29 +288,29 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         public PDQueue<E> consL(E e) {
-            return createPair(e, e0);
+            return internalPair(e, e0);
         }
 
         public PDQueue<E> consR(E e) {
-            return createPair(e0, e);
+            return internalPair(e0, e);
         }
 
         @Override
         public PDQueue<E> consConsL(E ee, E e) {
-            return createTriple(ee, e, e0);
+            return internalTriple(ee, e, e0);
         }
 
         @Override
         public PDQueue<E> consConsR(E e, E ee) {
-            return createTriple(e0, e, ee);
+            return internalTriple(e0, e, ee);
         }
 
         public PDQueue<E> tailL() {
-            return createEmpty();
+            return internalEmpty();
         }
 
         public PDQueue<E> tailR() {
-            return createEmpty();
+            return internalEmpty();
         }
 
 
@@ -222,13 +324,13 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         @Override
-        public PDQueue<E> changeL(E e) {
-            return createSingleton(e);
+        public PDQueue<E> replaceL(E e) {
+            return internalSingleton(e);
         }
 
         @Override
-        public PDQueue<E> changeR(E e) {
-            return createSingleton(e);
+        public PDQueue<E> replaceR(E e) {
+            return internalSingleton(e);
         }
 
         @Override
@@ -260,29 +362,29 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         public PDQueue<E> consL(E e) {
-            return createTriple(e, e0, e1);
+            return internalTriple(e, e0, e1);
         }
 
         public PDQueue<E> consR(E e) {
-            return createTriple(e0, e1, e);
+            return internalTriple(e0, e1, e);
         }
 
         @Override
         public PDQueue<E> consConsL(E ee, E e) {
-            return createQuadruple(ee, e, e0, e1);
+            return internalQuadruple(ee, e, e0, e1);
         }
 
         @Override
         public PDQueue<E> consConsR(E e, E ee) {
-            return createQuadruple(e0, e1, e, ee);
+            return internalQuadruple(e0, e1, e, ee);
         }
 
         public PDQueue<E> tailL() {
-            return createSingleton(e1);
+            return internalSingleton(e1);
         }
 
         public PDQueue<E> tailR() {
-            return createSingleton(e0);
+            return internalSingleton(e0);
         }
 
         @Override
@@ -296,18 +398,18 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         @Override
-        public PDQueue<E> changeL(E e) {
-            return createPair(e, e1);
+        public PDQueue<E> replaceL(E e) {
+            return internalPair(e, e1);
         }
 
         @Override
-        public PDQueue<E> changeR(E e) {
-            return createPair(e0, e);
+        public PDQueue<E> replaceR(E e) {
+            return internalPair(e0, e);
         }
 
         @Override
         public <A> A get(int n, BiFunction<E, Integer, A> f) {
-            int m = sizeOf(e0);
+            int m = internalSizeOf(e0);
             return n < m ? f.apply(e0, n) : f.apply(e1, n - m);
         }
 
@@ -336,19 +438,19 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         public PDQueue<E> consL(E e) {
-            return createQuadruple(e, e0, e1, e2);
+            return internalQuadruple(e, e0, e1, e2);
         }
 
         public PDQueue<E> consR(E e) {
-            return createQuadruple(e0, e1, e2, e);
+            return internalQuadruple(e0, e1, e2, e);
         }
 
         public PDQueue<E> tailL() {
-            return createPair(e1, e2);
+            return internalPair(e1, e2);
         }
 
         public PDQueue<E> tailR() {
-            return createPair(e0, e1);
+            return internalPair(e0, e1);
         }
 
         @Override
@@ -363,31 +465,31 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
 
         @Override
         public PDQueue<E> consConsL(E ee, E e) {
-            return createComplQ(createPair(ee, e), this);
+            return internalComplQ(internalPair(ee, e), this);
         }
 
         @Override
         public PDQueue<E> consConsR(E e, E ee) {
-            return createComplQ(this, createPair(e, ee));
+            return internalComplQ(this, internalPair(e, ee));
         }
 
         @Override
-        public PDQueue<E> changeL(E e) {
-            return createTriple(e, e1, e2);
+        public PDQueue<E> replaceL(E e) {
+            return internalTriple(e, e1, e2);
         }
 
         @Override
-        public PDQueue<E> changeR(E e) {
-            return createTriple(e0, e1, e);
+        public PDQueue<E> replaceR(E e) {
+            return internalTriple(e0, e1, e);
         }
 
         @Override
         public <A> A get(int n, BiFunction<E, Integer, A> f) {
-            int m0 = sizeOf(e0);
+            int m0 = internalSizeOf(e0);
             if (n < m0) {
                 return f.apply(e0, n);
             }
-            int m1 = sizeOf(e1) + m0;
+            int m1 = internalSizeOf(e1) + m0;
             if (n < m1) {
                 return f.apply(e1, n - m0);
             }
@@ -420,19 +522,19 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         public PDQueue<E> consL(E e) {
-            return createComplQ(createPair(e, e0), createTriple(e1, e2, e3));
+            return internalComplQ(internalPair(e, e0), internalTriple(e1, e2, e3));
         }
 
         public PDQueue<E> consR(E e) {
-            return createComplQ(createTriple(e0, e1, e2), createPair(e3, e));
+            return internalComplQ(internalTriple(e0, e1, e2), internalPair(e3, e));
         }
 
         public PDQueue<E> tailL() {
-            return createTriple(e1, e2, e3);
+            return internalTriple(e1, e2, e3);
         }
 
         public PDQueue<E> tailR() {
-            return createTriple(e0, e1, e2);
+            return internalTriple(e0, e1, e2);
         }
 
         @Override
@@ -447,43 +549,43 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
 
         @Override
         public PDQueue<E> consConsL(E ee, E e) {
-            return createComplQ(createPair(ee, e), this);
+            return internalComplQ(internalPair(ee, e), this);
         }
 
         @Override
         public PDQueue<E> consConsR(E e, E ee) {
-            return createComplQ(this, createPair(e, ee));
+            return internalComplQ(this, internalPair(e, ee));
         }
 
         @Override
-        public PDQueue<E> changeL(E e) {
-            return createQuadruple(e, e1, e2, e3);
+        public PDQueue<E> replaceL(E e) {
+            return internalQuadruple(e, e1, e2, e3);
         }
 
         @Override
-        public PDQueue<E> changeR(E e) {
-            return createQuadruple(e0, e1, e2, e);
+        public PDQueue<E> replaceR(E e) {
+            return internalQuadruple(e0, e1, e2, e);
         }
 
         @Override
         public <A> A get(int n, BiFunction<E, Integer, A> f) {
-            int m0 = sizeOf(e0);
-            int m1 = sizeOf(e1) + m0;
+            int m0 = internalSizeOf(e0);
+            int m1 = internalSizeOf(e1) + m0;
 
             if (n < m1) {
                 return n < m0 ? f.apply(e0, n) : f.apply(e1, n - m0);
             } else {
-                int m2 = sizeOf(e2) + m1;
+                int m2 = internalSizeOf(e2) + m1;
                 return n < m2 ? f.apply(e2, n - m1) : f.apply(e3, n - m2);
             }
         }
 
         PDQueue<E> leftPair() {
-            return createPair(e0, e1);
+            return internalPair(e0, e1);
         }
 
         PDQueue<E> rightPair() {
-            return createPair(e2, e3);
+            return internalPair(e2, e3);
         }
 
 
@@ -519,11 +621,11 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         public PDQueue<E> consL(E e) {
             switch (left.kind()) {
                 case 2:
-                    return createComplQ(left.consL(e), middle, right);
+                    return internalComplQ(left.consL(e), middle, right);
                 case 3:
-                    return createComplQ(left.consL(e), middle.prepareConsL(), right);
+                    return internalComplQ(left.consL(e), middle.prepareConsL(), right);
                 case 4:
-                    return createComplQ(createPair(e, left.headL()), middle.consL(left.tailL()), right);
+                    return internalComplQ(internalPair(e, left.headL()), middle.consL(left.tailL()), right);
                 default:
                     throw new IllegalStateException("not reachable");
             }
@@ -532,11 +634,11 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         public PDQueue<E> consR(E e) {
             switch (right.kind()) {
                 case 2:
-                    return createComplQ(left, middle, right.consR(e));
+                    return internalComplQ(left, middle, right.consR(e));
                 case 3:
-                    return createComplQ(left, middle.prepareConsR(), right.consR(e));
+                    return internalComplQ(left, middle.prepareConsR(), right.consR(e));
                 case 4:
-                    return createComplQ(left, middle.consR(right.tailR()), createPair(right.headR(), e));
+                    return internalComplQ(left, middle.consR(right.tailR()), internalPair(right.headR(), e));
                 default:
                     throw new IllegalStateException("not reachable");
             }
@@ -547,11 +649,11 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         public PDQueue<E> consConsL(E ee, E e) {
             switch (left.kind()) {
                 case 2:
-                    return createComplQ(left.consConsL(ee, e), middle.prepareConsL(), right);
+                    return internalComplQ(left.consConsL(ee, e), middle.prepareConsL(), right);
                 case 3:
-                    return createComplQ(createPair(ee, e), middle.consL(left), right);
+                    return internalComplQ(internalPair(ee, e), middle.consL(left), right);
                 case 4:
-                    return createComplQ(createTriple(ee, e, left.headL()), middle.consL(left.tailL()).prepareConsL(), right);
+                    return internalComplQ(internalTriple(ee, e, left.headL()), middle.consL(left.tailL()).prepareConsL(), right);
                 default:
                     throw new IllegalStateException("not reachable");
 
@@ -562,11 +664,11 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         public PDQueue<E> consConsR(E e, E ee) {
             switch (right.kind()) {
                 case 2:
-                    return createComplQ(left, middle.prepareConsR(), right.consConsR(e, ee));
+                    return internalComplQ(left, middle.prepareConsR(), right.consConsR(e, ee));
                 case 3:
-                    return createComplQ(left, middle.consR(right), createPair(e, ee));
+                    return internalComplQ(left, middle.consR(right), internalPair(e, ee));
                 case 4:
-                    return createComplQ(left, middle.consR(right.tailR()), createTriple(right.headR(), e, ee));
+                    return internalComplQ(left, middle.consR(right.tailR()), internalTriple(right.headR(), e, ee));
                 default:
                     throw new IllegalStateException("not reachable");
             }
@@ -578,14 +680,14 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
                     if (middle.isEmpty()) {
                         return right.consL(left.headR());
                     } else {
-                        return createComplQ(middle.headL().consL(left.headR()), middle.tailL(), right);
+                        return internalComplQ(middle.headL().consL(left.headR()), middle.tailL(), right);
                     }
                 }
                 case 3: {
-                    return createComplQ(left.tailL(), middle.prepareTailL(), right);
+                    return internalComplQ(left.tailL(), middle.prepareTailL(), right);
                 }
                 case 4: {
-                    return createComplQ(left.tailL(), middle, right);
+                    return internalComplQ(left.tailL(), middle, right);
                 }
                 default:
                     throw new IllegalStateException("not reachable");
@@ -598,14 +700,14 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
                     if (middle.isEmpty()) {
                         return left.consR(right.headL());
                     } else {
-                        return createComplQ(left, middle.tailR(), middle.headR().consR(right.headL()));
+                        return internalComplQ(left, middle.tailR(), middle.headR().consR(right.headL()));
                     }
                 }
                 case 3: {
-                    return createComplQ(left, middle.prepareTailR(), right.tailR());
+                    return internalComplQ(left, middle.prepareTailR(), right.tailR());
                 }
                 case 4: {
-                    return createComplQ(left, middle, right.tailR());
+                    return internalComplQ(left, middle, right.tailR());
                 }
                 default:
                     throw new IllegalStateException("not reachable");
@@ -614,12 +716,12 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
 
         @Override
         public PDQueue<E> appendLTo(PDQueue<E> q) {
-            return createConcatenation(this, q);
+            return internalConcatenate(this, q);
         }
 
         @Override
         public PDQueue<E> appendRTo(PDQueue<E> q) {
-            return createConcatenation(q, this);
+            return internalConcatenate(q, this);
         }
 
         PDQueue<PDQueue<E>> packR() {
@@ -652,7 +754,7 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         protected PDQueue<E> prepareConsL() {
             if (left.kind() == 4) {
                 DQ4<E> l = (DQ4<E>) left;
-                return createComplQ(l.leftPair(), middle.consL(l.rightPair()), right);
+                return internalComplQ(l.leftPair(), middle.consL(l.rightPair()), right);
             } else {
                 return this;
             }
@@ -662,7 +764,7 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         protected PDQueue<E> prepareConsR() {
             if (right.kind() == 4) {
                 DQ4<E> r = (DQ4<E>) right;
-                return createComplQ(left, middle.consR(r.leftPair()), ((DQ4<E>) right).rightPair());
+                return internalComplQ(left, middle.consR(r.leftPair()), ((DQ4<E>) right).rightPair());
             } else {
                 return this;
             }
@@ -673,9 +775,9 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             if (left.kind() == 2 && !middle.isEmpty()) {
                 PDQueue<E> l = middle.headL();
                 if (l.kind() == 2) {
-                    return createComplQ(left.consConsR(l.headL(), l.headR()), middle.tailL(), right);
+                    return internalComplQ(left.consConsR(l.headL(), l.headR()), middle.tailL(), right);
                 } else {
-                    return createComplQ(left.consR(l.headL()), middle.changeL(l.tailL()), right);
+                    return internalComplQ(left.consR(l.headL()), middle.replaceL(l.tailL()), right);
                 }
             } else {
                 return this;
@@ -687,9 +789,9 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
             if (right.kind() == 2 && !middle.isEmpty()) {
                 PDQueue<E> r = middle.headR();
                 if (r.kind() == 2) {
-                    return createComplQ(left, middle.tailR(), right.consConsL(r.headL(), r.headR()));
+                    return internalComplQ(left, middle.tailR(), right.consConsL(r.headL(), r.headR()));
                 } else {
-                    return createComplQ(left, middle.changeR(r.tailR()), right.consL(r.headR()));
+                    return internalComplQ(left, middle.replaceR(r.tailR()), right.consL(r.headR()));
                 }
             } else {
                 return this;
@@ -697,13 +799,13 @@ public abstract class PDQueue<E> implements PDQueueFactory<E> {
         }
 
         @Override
-        public PDQueue<E> changeL(E e) {
-            return createComplQ(left.changeL(e), middle, right);
+        public PDQueue<E> replaceL(E e) {
+            return internalComplQ(left.replaceL(e), middle, right);
         }
 
         @Override
-        public PDQueue<E> changeR(E e) {
-            return createComplQ(left, middle, right.changeR(e));
+        public PDQueue<E> replaceR(E e) {
+            return internalComplQ(left, middle, right.replaceR(e));
         }
 
         @Override

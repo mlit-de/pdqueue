@@ -5,21 +5,70 @@ package de.mlit.pdqueue;
  */
 interface PDQueueFactory<E> {
 
-    PDQueue<E> createEmpty();
+    /**
+     * Not public api
+     * @return
+     */
+    PDQueue<E> internalEmpty();
 
-    PDQueue<E> createSingleton(E e0);
+    /**
+     * Not public api
+     * @param e0
+     * @return
+     */
+    PDQueue<E> internalSingleton(E e0);
 
-    PDQueue<E> createPair(E e0, E e1);
+    /**
+     * Not public api
+     * @param e0
+     * @param e1
+     * @return
+     */
+    PDQueue<E> internalPair(E e0, E e1);
 
-    PDQueue<E> createTriple(E e0, E e1, E e2);
+    /**
+     * Not public api
+     * @param e0
+     * @param e1
+     * @param e2
+     * @return
+     */
+    PDQueue<E> internalTriple(E e0, E e1, E e2);
 
-    PDQueue<E> createQuadruple(E e0, E e1, E e2, E e3);
+    /**
+     * Not public api
+     * @param e0
+     * @param e1
+     * @param e2
+     * @param e3
+     * @return
+     */
+    PDQueue<E> internalQuadruple(E e0, E e1, E e2, E e3);
 
-    PDQueue<E> createComplQ(PDQueue<E> left, PDQueue<PDQueue<E>> middle, PDQueue<E> right);
+    /**
+     * Not public api
+     * @param left
+     * @param middle
+     * @param right
+     * @return
+     */
+    PDQueue<E> internalComplQ(PDQueue<E> left, PDQueue<PDQueue<E>> middle, PDQueue<E> right);
 
-    PDQueue<E> createComplQ(PDQueue<E> left, PDQueue<E> right);
+    /**
+     * Not public api
+     * @param left
+     * @param right
+     * @return
+     */
+    PDQueue<E> internalComplQ(PDQueue<E> left, PDQueue<E> right);
 
-    default PDQueue<E> createConcatenation(PDQueue<E> q1, PDQueue<E> q2) {
+    /**
+     * Not public api
+     * @param q1
+     * @param q2
+     * @return
+     */
+    default PDQueue<E> internalConcatenate(PDQueue<E> q1, PDQueue<E> q2) {
         int k1 = q1.kind();
         int k2 = q2.kind();
         if (k1 < k2) {
@@ -29,11 +78,16 @@ interface PDQueueFactory<E> {
         } else {
             PDQueue.DQn<E> dq1 = (PDQueue.DQn<E>) q1;
             PDQueue.DQn<E> dq2 = (PDQueue.DQn<E>) q2;
-            return createComplQ(dq1.left, dq1.packR().appendLTo(dq2.packL()), dq2.right);
+            return internalComplQ(dq1.left, dq1.packR().appendLTo(dq2.packL()), dq2.right);
         }
     }
 
-    int sizeOf(E e);
+    /**
+     * Not public api
+     * @param e
+     * @return
+     */
+    int internalSizeOf(E e);
 
     interface Top<A> extends PDQueueFactory<A> {
 
@@ -75,42 +129,42 @@ interface PDQueueFactory<E> {
         Top.Q0 EMPTY = new Top.Q0();
 
         @Override
-        default public PDQueue<A> createEmpty() {
+        default public PDQueue<A> internalEmpty() {
             return EMPTY;
         }
 
         @Override
-        default public PDQueue<A> createSingleton(A e0) {
+        default public PDQueue<A> internalSingleton(A e0) {
             return new Top.Q1(1,e0);
         }
 
         @Override
-        default public PDQueue<A> createPair(A e0, A e1) {
+        default public PDQueue<A> internalPair(A e0, A e1) {
             return new Top.Q2(2, e0, e1);
         }
 
         @Override
-        default public PDQueue<A> createTriple(A e0, A e1, A e2) {
+        default public PDQueue<A> internalTriple(A e0, A e1, A e2) {
             return new Top.Q3(3, e0, e1, e2);
         }
 
         @Override
-        default public PDQueue<A> createQuadruple(A e0, A e1, A e2, A e3) {
+        default public PDQueue<A> internalQuadruple(A e0, A e1, A e2, A e3) {
             return new Top.Q4(4, e0, e1, e2, e3);
         }
 
         @Override
-        default public PDQueue<A> createComplQ(PDQueue<A> left, PDQueue<PDQueue<A>> middle, PDQueue<A> right) {
+        default public PDQueue<A> internalComplQ(PDQueue<A> left, PDQueue<PDQueue<A>> middle, PDQueue<A> right) {
             return new Top.Qn(left.size()+ middle.size()+right.size(), left, middle, right);
         }
 
         @Override
-        default PDQueue<A> createComplQ(PDQueue<A> left, PDQueue<A> right) {
+        default PDQueue<A> internalComplQ(PDQueue<A> left, PDQueue<A> right) {
             return new Top.Qn(left.size()+right.size(), left, Nest.EMPTY, right);
         }
 
         @Override
-        default public int sizeOf(A A) {
+        default public int internalSizeOf(A A) {
             return 1;
         }
     }
@@ -158,41 +212,41 @@ interface PDQueueFactory<E> {
         Q0 EMPTY = new Q0();
 
 
-        public default PDQueue<PDQueue<E>> createEmpty() {
+        public default PDQueue<PDQueue<E>> internalEmpty() {
             return EMPTY;
         }
 
 
-        default PDQueue<PDQueue<E>> createSingleton(PDQueue<E> e0) {
+        default PDQueue<PDQueue<E>> internalSingleton(PDQueue<E> e0) {
             return new Q1(e0.size(),e0);
         }
 
 
-        default PDQueue<PDQueue<E>> createPair(PDQueue<E> e0, PDQueue<E> e1) {
+        default PDQueue<PDQueue<E>> internalPair(PDQueue<E> e0, PDQueue<E> e1) {
             return new Q2(e0.size()+e1.size(), e0, e1);
         }
 
 
-        default PDQueue<PDQueue<E>> createTriple(PDQueue<E> e0, PDQueue<E> e1, PDQueue<E> e2) {
+        default PDQueue<PDQueue<E>> internalTriple(PDQueue<E> e0, PDQueue<E> e1, PDQueue<E> e2) {
             return new Q3(e0.size()+e1.size()+e2.size(), e0, e1, e2);
         }
 
 
-        default PDQueue<PDQueue<E>> createQuadruple(PDQueue<E> e0, PDQueue<E> e1, PDQueue<E> e2, PDQueue<E> e3) {
+        default PDQueue<PDQueue<E>> internalQuadruple(PDQueue<E> e0, PDQueue<E> e1, PDQueue<E> e2, PDQueue<E> e3) {
             return new Q4(e0.size()+e1.size()+e2.size()+e3.size(), e0, e1, e2, e3);
         }
 
 
-        default PDQueue<PDQueue<E>> createComplQ(PDQueue<PDQueue<E>> left, PDQueue<PDQueue<PDQueue<E>>> middle, PDQueue<PDQueue<E>> right) {
+        default PDQueue<PDQueue<E>> internalComplQ(PDQueue<PDQueue<E>> left, PDQueue<PDQueue<PDQueue<E>>> middle, PDQueue<PDQueue<E>> right) {
             return new Qn(left.size()+ middle.size()+right.size(), left, middle, right);
         }
 
         @Override
-        default PDQueue<PDQueue<E>> createComplQ(PDQueue<PDQueue<E>> left, PDQueue<PDQueue<E>> right) {
+        default PDQueue<PDQueue<E>> internalComplQ(PDQueue<PDQueue<E>> left, PDQueue<PDQueue<E>> right) {
             return new Qn(left.size()+right.size(), left, Q0.EMPTY, right);
         }
 
-        public default int sizeOf(PDQueue<E> dq) {
+        public default int internalSizeOf(PDQueue<E> dq) {
             return dq.size();
         }
 
